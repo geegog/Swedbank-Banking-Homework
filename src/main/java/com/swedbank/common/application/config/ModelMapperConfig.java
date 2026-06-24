@@ -9,7 +9,6 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Currency;
 import java.util.List;
 
 @Configuration
@@ -24,13 +23,13 @@ public class ModelMapperConfig {
         Converter<Money, MoneyDTO> moneyToDto = ctx -> {
             Money src = ctx.getSource();
             if (src == null) return null;
-            return new MoneyDTO(src.getAmount(), src.getCurrency().getCurrencyCode());
+            return new MoneyDTO(src.getAmount(), src.getCurrency());
         };
 
         Converter<MoneyDTO, Money> dtoToMoney = ctx -> {
             MoneyDTO src = ctx.getSource();
             if (src == null) return null;
-            return Money.of(src.getAmount(), Currency.getInstance(src.getCurrency()));
+            return Money.of(src.getAmount(), src.getCurrency());
         };
 
         modelMapper.addConverter(moneyToDto);

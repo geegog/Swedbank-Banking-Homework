@@ -27,13 +27,13 @@ public class MoneyDTO {
 
     @NotNull(message = "Currency is required")
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a 3-letter ISO-4217 code")
-    private String currency;
+    private Currency currency;
 
     public static MoneyDTO toDto(Money money) {
-        return new MoneyDTO(money.getAmount(), money.getCurrency().getCurrencyCode());
+        return new MoneyDTO(money.getAmount(), money.getCurrency());
     }
 
     public static Money fromDto(MoneyDTO dto) {
-        return Money.of(dto.getAmount(), Currency.getInstance(dto.getCurrency()));
+        return Money.of(dto.getAmount(), dto.getCurrency());
     }
 }

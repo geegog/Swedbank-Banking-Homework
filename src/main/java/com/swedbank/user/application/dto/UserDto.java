@@ -1,6 +1,7 @@
 package com.swedbank.user.application.dto;
 
 import com.swedbank.common.application.Dto.BaseDto;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -19,5 +20,6 @@ public class UserDto extends BaseDto {
     private String lastName;
 
     @NotNull(message = "Email is required")
+    @Email(message = "Please provide a valid email address")
     private String email;
 }

@@ -40,6 +40,10 @@ public class AccountService {
 
         var account = getAccountByNumberAndUser(accountTransactionRequest.getAccountNumber(), user.getEmail());
 
+        if (accountTransactionRequest.getValue().getCurrency() != account.getBalance().getCurrency()) {
+            throw new RuntimeException("Transaction currency must match the account currency " + account.getBalance().getCurrency());
+        }
+
         var newBalance = account.getBalance().getAmount() != null ? account.getBalance().getAmount().add(accountTransactionRequest.getValue().getAmount()) : null;
         account.setBalance(Money.of(newBalance, account.getBalance().getCurrency()));
 
@@ -88,7 +92,7 @@ public class AccountService {
         Account account = new Account();
         account.setAccountName(accountRequest.getAccountName());
         account.setBalance(Money.of(BigDecimal.ZERO, accountRequest.getCurrency()));
-        account.setAccountNumber(AccountNumberGenerator.generateFormattedNumber());
+        account.setAccountNumber(AccountNumberGenerator.generateAccountNumber());
         accountRepository.save(account);
         return modelMapper.map(account, AccountDto.class);
     }

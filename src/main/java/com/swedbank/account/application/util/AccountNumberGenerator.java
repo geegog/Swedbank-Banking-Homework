@@ -1,17 +1,19 @@
 package com.swedbank.account.application.util;
 
 import java.security.SecureRandom;
+import java.util.stream.Collectors;
 
 public class AccountNumberGenerator {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    public static String generateFormattedNumber() {
-        int part1 = 1000 + SECURE_RANDOM.nextInt(9000);
-        int part2 = 1000 + SECURE_RANDOM.nextInt(9000);
-        int part3 = 1000 + SECURE_RANDOM.nextInt(9000);
+    private static final int ACCOUNT_NUMBER_LENGTH = 12;
 
-        return String.format("EE-%d-%d-%d", part1, part2, part3);
+
+    public static String generateAccountNumber() {
+        return SECURE_RANDOM.ints(ACCOUNT_NUMBER_LENGTH, 0, 10)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining());
     }
 
 }
