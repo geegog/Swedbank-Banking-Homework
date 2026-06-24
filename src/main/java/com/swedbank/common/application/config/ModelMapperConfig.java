@@ -1,6 +1,6 @@
 package com.swedbank.common.application.config;
 
-import com.swedbank.common.application.Dto.MoneyDTO;
+import com.swedbank.common.application.Dto.MoneyDto;
 import com.swedbank.common.application.customizer.ModelMapperCustomizer;
 import com.swedbank.common.domian.Money;
 import org.modelmapper.Converter;
@@ -20,14 +20,14 @@ public class ModelMapperConfig {
 
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
-        Converter<Money, MoneyDTO> moneyToDto = ctx -> {
+        Converter<Money, MoneyDto> moneyToDto = ctx -> {
             Money src = ctx.getSource();
             if (src == null) return null;
-            return new MoneyDTO(src.getAmount(), src.getCurrency());
+            return new MoneyDto(src.getAmount(), src.getCurrency());
         };
 
-        Converter<MoneyDTO, Money> dtoToMoney = ctx -> {
-            MoneyDTO src = ctx.getSource();
+        Converter<MoneyDto, Money> dtoToMoney = ctx -> {
+            MoneyDto src = ctx.getSource();
             if (src == null) return null;
             return Money.of(src.getAmount(), src.getCurrency());
         };

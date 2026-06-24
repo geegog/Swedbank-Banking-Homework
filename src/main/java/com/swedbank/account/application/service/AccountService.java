@@ -7,10 +7,15 @@ import com.swedbank.account.domian.model.Account;
 import com.swedbank.account.domian.model.CreateAccountRequest;
 import com.swedbank.account.domian.repository.AccountRepository;
 import com.swedbank.common.domian.Money;
+import com.swedbank.transaction.application.dto.TransactionRequest;
+import com.swedbank.transaction.application.service.TransactionService;
+import com.swedbank.transaction.domian.model.TransactionType;
+import com.swedbank.user.application.dto.UserDto;
 import com.swedbank.user.application.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -18,6 +23,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+
+    private final TransactionService transactionService;
 
     private final AccountRepository accountRepository;
 
@@ -34,6 +41,7 @@ public class AccountService {
         return accountRepository.findByUser_Email(userEmail);
     }
 
+    @Transactional
     public void depositMoney(AccountTransactionRequest accountTransactionRequest, String email) {
 
         var user = userService.getUserByEmail(email);
@@ -47,6 +55,19 @@ public class AccountService {
 
         accountRepository.save(account);
 
+        logTransaction(accountTransactionRequest, user, TransactionType.CREDIT);
+
+    }
+
+    private void logTransaction(AccountTransactionRequest accountTransactionRequest, UserDto user, TransactionType credit) {
+        TransactionRequest transactionRequest = new TransactionRequest();
+        transactionRequest.setAccountNumber(accountTransactionRequest.getAccountNumber());
+        transactionRequest.setUserId(user.getId());
+        transactionRequest.setReference(accountTransactionRequest.getReference());
+        transactionRequest.setValue(accountTransactionRequest.getValue());
+        transactionRequest.setTransactionType(credit);
+
+        transactionService.recordTransaction(transactionRequest);
     }
 
     private static void validateCurrency(boolean accountTransactionRequest, String account) {
@@ -55,6 +76,7 @@ public class AccountService {
         }
     }
 
+    @Transactional
     public void withdrawMoney(AccountTransactionRequest accountTransactionRequest, String email) {
 
         var user = userService.getUserByEmail(email);
@@ -67,6 +89,8 @@ public class AccountService {
         account.setBalance(Money.of(newBalance, account.getBalance().getCurrency()));
 
         accountRepository.save(account);
+
+        logTransaction(accountTransactionRequest, user, TransactionType.DEBIT);
 
     }
 

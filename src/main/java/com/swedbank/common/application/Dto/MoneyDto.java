@@ -19,7 +19,7 @@ import java.util.Currency;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MoneyDTO {
+public class MoneyDto {
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be greater than 0")
     @Digits(integer = 15, fraction = 2, message = "Amount must have at most 2 decimal places")
@@ -29,11 +29,11 @@ public class MoneyDTO {
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a 3-letter ISO-4217 code")
     private Currency currency;
 
-    public static MoneyDTO toDto(Money money) {
-        return new MoneyDTO(money.getAmount(), money.getCurrency());
+    public static MoneyDto toDto(Money money) {
+        return new MoneyDto(money.getAmount(), money.getCurrency());
     }
 
-    public static Money fromDto(MoneyDTO dto) {
+    public static Money fromDto(MoneyDto dto) {
         return Money.of(dto.getAmount(), dto.getCurrency());
     }
 }
