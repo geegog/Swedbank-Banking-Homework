@@ -4,6 +4,7 @@ import com.swedbank.account.application.converter.CurrencyConverter;
 import com.swedbank.account.application.dto.AccountDto;
 import com.swedbank.account.application.dto.AccountTransactionRequest;
 import com.swedbank.account.application.dto.ExchangeRequest;
+import com.swedbank.account.application.infrastructure.aop.SimulateExternalLog;
 import com.swedbank.account.application.util.AccountNumberGenerator;
 import com.swedbank.account.domian.model.Account;
 import com.swedbank.account.domian.model.CreateAccountRequest;
@@ -93,6 +94,7 @@ public class AccountService {
         }
     }
 
+    @SimulateExternalLog
     @Transactional
     public void withdrawMoney(AccountTransactionRequest accountTransactionRequest, String email) {
 
