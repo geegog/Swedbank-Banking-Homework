@@ -1,4 +1,4 @@
-package com.swedbank.user.domain;
+package com.swedbank.user.domain.model;
 
 import com.swedbank.common.domian.EntityBase;
 import jakarta.persistence.Entity;

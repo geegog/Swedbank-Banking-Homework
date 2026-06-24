@@ -1,12 +1,15 @@
-package com.swedbank.user.repository;
+package com.swedbank.user.domain.repository;
 
-import com.swedbank.user.domain.User;
+import com.swedbank.user.domain.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
+
+    Optional<User> findByEmail(String email);
 
 }
