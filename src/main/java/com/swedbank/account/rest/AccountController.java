@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "${api.url.prefix}${api.version}/account")
@@ -50,11 +52,17 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(value = "/{accountNumber}/balance")
+    @GetMapping(value = "/{accountNumber}")
     public ResponseEntity<AccountDto> getAccountBalance(
             @AuthenticationPrincipal User user,
             @PathVariable String accountNumber) {
-        return ResponseEntity.ok(accountService.getAccountBalance(accountNumber, user.getUsername()));
+        return ResponseEntity.ok(accountService.getAccount(accountNumber, user.getUsername()));
+    }
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<Set<AccountDto>> getAllAccounts(
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(accountService.getAccountsByUserEmail(user.getUsername()));
     }
 
 }

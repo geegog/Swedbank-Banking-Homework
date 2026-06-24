@@ -119,7 +119,7 @@ public class AccountService {
 
     }
 
-    public AccountDto getAccountBalance(String accountNumber, String email) {
+    public AccountDto getAccount(String accountNumber, String email) {
 
         var user = userService.getUserByEmail(email);
 
