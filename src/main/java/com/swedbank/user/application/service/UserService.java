@@ -5,6 +5,7 @@ import com.swedbank.user.domain.model.User;
 import com.swedbank.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     private final ModelMapper modelMapper;
 
@@ -28,6 +31,15 @@ public class UserService {
     public void createUser(UserDto userDto) {
         User user = modelMapper.map(userDto, User.class);
         userRepository.save(user);
+    }
+
+    public UserDto verifyUser(String email, String password) {
+        var user = findUserByEmail(email);
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            return modelMapper.map(user, UserDto.class);
+        } else {
+            throw new RuntimeException("Password mismatch");
+        }
     }
 
 }

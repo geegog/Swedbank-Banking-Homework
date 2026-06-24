@@ -50,7 +50,7 @@ public class AccountService {
     }
 
     @Transactional
-    public void depositMoney(AccountTransactionRequest accountTransactionRequest, String email) {
+    public AccountDto depositMoney(AccountTransactionRequest accountTransactionRequest, String email) {
 
         var user = userService.getUserByEmail(email);
 
@@ -61,9 +61,11 @@ public class AccountService {
         var newBalance = account.getBalance().getAmount() != null ? account.getBalance().getAmount().add(accountTransactionRequest.getValue().getAmount()) : null;
         account.setBalance(Money.of(newBalance, account.getBalance().getCurrency()));
 
-        accountRepository.save(account);
+        var updateAccount = accountRepository.save(account);
 
         logTransaction(accountTransactionRequest, user, TransactionType.CREDIT);
+
+        return modelMapper.map(updateAccount, AccountDto.class);
 
     }
 

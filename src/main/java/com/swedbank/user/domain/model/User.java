@@ -22,4 +22,6 @@ public class User extends EntityBase {
 
     private String email;
 
+    private String password;
+
 }
