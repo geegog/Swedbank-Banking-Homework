@@ -40,9 +40,7 @@ public class AccountService {
 
         var account = getAccountByNumberAndUser(accountTransactionRequest.getAccountNumber(), user.getEmail());
 
-        if (accountTransactionRequest.getValue().getCurrency() != account.getBalance().getCurrency()) {
-            throw new RuntimeException("Transaction currency must match the account currency " + account.getBalance().getCurrency());
-        }
+        validateCurrency(accountTransactionRequest.getValue().getCurrency() != account.getBalance().getCurrency(), "Transaction currency must match the account currency " + account.getBalance().getCurrency());
 
         var newBalance = account.getBalance().getAmount() != null ? account.getBalance().getAmount().add(accountTransactionRequest.getValue().getAmount()) : null;
         account.setBalance(Money.of(newBalance, account.getBalance().getCurrency()));
@@ -51,15 +49,19 @@ public class AccountService {
 
     }
 
+    private static void validateCurrency(boolean accountTransactionRequest, String account) {
+        if (accountTransactionRequest) {
+            throw new RuntimeException(account);
+        }
+    }
+
     public void withdrawMoney(AccountTransactionRequest accountTransactionRequest, String email) {
 
         var user = userService.getUserByEmail(email);
 
         var account = getAccountByNumberAndUser(accountTransactionRequest.getAccountNumber(), user.getEmail());
 
-        if (account.getBalance().getAmount() == null || account.getBalance().getAmount().compareTo(accountTransactionRequest.getValue().getAmount()) < 0) {
-            throw new RuntimeException("Insufficient balance");
-        }
+        validateCurrency(account.getBalance().getAmount() == null || account.getBalance().getAmount().compareTo(accountTransactionRequest.getValue().getAmount()) < 0, "Insufficient balance");
 
         var newBalance = account.getBalance().getAmount().subtract(accountTransactionRequest.getValue().getAmount());
         account.setBalance(Money.of(newBalance, account.getBalance().getCurrency()));
