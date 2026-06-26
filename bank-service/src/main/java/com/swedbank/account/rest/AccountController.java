@@ -4,8 +4,10 @@ import com.swedbank.account.application.dto.AccountDto;
 import com.swedbank.account.application.dto.AccountTransactionRequest;
 import com.swedbank.account.application.dto.ExchangeRequest;
 import com.swedbank.account.application.service.AccountService;
+import com.swedbank.user.application.dto.UserAccountRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -50,6 +53,15 @@ public class AccountController {
     ) {
         accountService.currencyExchange(exchangeRequest, user.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/user")
+    public ResponseEntity<List<AccountDto>> createUserAccount(
+            @RequestBody @Valid UserAccountRequest userAccountRequest
+    ) {
+        return ResponseEntity.status(
+                HttpStatus.CREATED
+        ).body(accountService.createUserAccount(userAccountRequest));
     }
 
     @GetMapping(value = "/{accountNumber}")

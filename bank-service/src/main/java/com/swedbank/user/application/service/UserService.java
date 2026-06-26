@@ -30,9 +30,10 @@ public class UserService {
         return modelMapper.map(user, UserDto.class);
     }
 
-    public void createUser(UserDto userDto) {
+    public User createUser(UserDto userDto) {
         User user = modelMapper.map(userDto, User.class);
-        userRepository.save(user);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
     }
 
     public UserDto verifyUser(String email, String password) {

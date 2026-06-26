@@ -20,14 +20,19 @@ import com.swedbank.transaction.domian.model.TransactionType;
 import com.swedbank.user.application.dto.UserAccountRequest;
 import com.swedbank.user.application.dto.UserDto;
 import com.swedbank.user.application.service.UserService;
+import com.swedbank.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -179,20 +184,24 @@ public class AccountService {
 
     }
 
-    public AccountDto createAccount(CreateAccountRequest accountRequest) {
-        Account account = new Account();
-        account.setAccountName(accountRequest.getAccountName());
-        account.setBalance(Money.of(BigDecimal.ZERO, accountRequest.getCurrency()));
-        account.setAccountNumber(AccountNumberGenerator.generateAccountNumber());
-        accountRepository.save(account);
-        return modelMapper.map(account, AccountDto.class);
+    public List<AccountDto> createAccount(List<CreateAccountRequest> accountRequests, User user) {
+        List<Account> accounts = accountRequests.stream().map(accountRequest -> {
+            Account account = new Account();
+            account.setAccountName(accountRequest.getAccountName());
+            account.setBalance(Money.of(BigDecimal.ZERO, accountRequest.getCurrency()));
+            account.setAccountNumber(AccountNumberGenerator.generateAccountNumber());
+            account.setUser(user);
+            return account;
+        }).collect(Collectors.toList());
+
+        return modelMapper.map( accountRepository.saveAll(accounts), new TypeToken<List<AccountDto>>() {}.getType());
     }
 
     @Transactional
-    public void createUserAccount(UserAccountRequest userAccountRequest) {
-        userService.createUser(userAccountRequest.getUser());
+    public List<AccountDto> createUserAccount(UserAccountRequest userAccountRequest) {
+        var user = userService.createUser(userAccountRequest.getUser());
 
-        createAccount(userAccountRequest.getCreateAccount());
+        return createAccount(userAccountRequest.getCreateAccounts(), user);
     }
 
 }

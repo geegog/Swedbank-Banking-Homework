@@ -48,7 +48,8 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(expressionInterceptUrlRegistry ->
                 expressionInterceptUrlRegistry
                     .requestMatchers(
-                        HttpMethod.POST
+                        HttpMethod.POST,
+                            "/api/v1/account/user"
                     )
                     .permitAll()
                     .requestMatchers(
