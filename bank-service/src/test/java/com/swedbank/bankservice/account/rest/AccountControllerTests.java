@@ -8,7 +8,9 @@ import com.swedbank.account.application.dto.ExchangeResponse;
 import com.swedbank.account.application.infrastructure.aop.ExternalLoggingAspect;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.bankservice.common.rest.BaseIntegrationTest;
+import com.swedbank.common.application.Dto.ErrorResponse;
 import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.exception.ExternalSystemException;
 import com.swedbank.user.application.dto.UserAccountRequest;
 import com.swedbank.user.application.dto.UserDto;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +30,7 @@ import static com.swedbank.bankservice.common.utils.ApiUtil.mockPostApi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -123,6 +126,75 @@ class AccountControllerTests extends BaseIntegrationTest {
 	}
 
 	@Test
+	@DisplayName("Should fail when user makes a deposit in wrong currency")
+	void accountDepositWrongCurrencyTest() throws Exception {
+		var email = "user21@gmail.com";
+		var accounts = performBulkAccountCreation(email);
+		AccountTransactionRequest depositRequest = new AccountTransactionRequest();
+		depositRequest.setAccountNumber(accounts.get(0).getAccountNumber());
+		depositRequest.setValue(MoneyDto.builder()
+				.amount(new BigDecimal("45.54"))
+				.currency(Currency.getInstance("SEK"))
+				.build());
+		depositRequest.setReference("Initial Deposit");
+
+		var payload = objectMapper.writeValueAsString(depositRequest);
+
+		var result = mockPostApi(mockMvc, payload, "/account/deposit", createTestUser(email), null)
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+		assertThat(errorResponse.statusCode()).isEqualTo(400);
+	}
+
+	@Test
+	@DisplayName("Should fail when user makes a deposit without supplying account number")
+	void accountDepositNoAccountNumberTest() throws Exception {
+		var email = "user22@gmail.com";
+		AccountTransactionRequest depositRequest = new AccountTransactionRequest();
+		depositRequest.setValue(MoneyDto.builder()
+				.amount(new BigDecimal("45.54"))
+				.currency(Currency.getInstance("USD"))
+				.build());
+		depositRequest.setReference("Initial Deposit");
+
+		var payload = objectMapper.writeValueAsString(depositRequest);
+
+		var result = mockPostApi(mockMvc, payload, "/account/deposit", createTestUser(email), null)
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+		assertThat(errorResponse.statusCode()).isEqualTo(400);
+	}
+
+	@Test
+	@DisplayName("Should fail when user makes a deposit with wrong account number")
+	void accountDepositIncorrectAccountNumberTest() throws Exception {
+		var email = "user23@gmail.com";
+		AccountTransactionRequest depositRequest = new AccountTransactionRequest();
+		depositRequest.setAccountNumber("123456789");
+		depositRequest.setValue(MoneyDto.builder()
+				.amount(new BigDecimal("45.54"))
+				.currency(Currency.getInstance("USD"))
+				.build());
+		depositRequest.setReference("Initial Deposit");
+
+		var payload = objectMapper.writeValueAsString(depositRequest);
+
+		var result = mockPostApi(mockMvc, payload, "/account/deposit", createTestUser(email), null)
+				.andExpect(status().isNotFound())
+				.andReturn();
+
+		ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+		assertThat(errorResponse.statusCode()).isEqualTo(404);
+	}
+
+	@Test
 	@DisplayName("Should process withdrawal and log event to external tracker")
 	void accountWithdrawalTest() throws Exception {
 		var email = "user3@gmail.com";
@@ -147,6 +219,58 @@ class AccountControllerTests extends BaseIntegrationTest {
 		AccountDto updatedAccount = objectMapper.readValue(result.getResponse().getContentAsString(), AccountDto.class);
 
 		assertThat(updatedAccount.getBalance().getAmount()).isEqualByComparingTo("854.90");
+	}
+
+	@Test
+	@DisplayName("Should not allow withdrawal when fund is not enough")
+	void accountWithdrawalInsufficientFundTest() throws Exception {
+		var email = "user31@gmail.com";
+		var accounts = performBulkAccountCreation(email);
+		var accountNumber = accounts.get(0).getAccountNumber();
+
+		AccountTransactionRequest deposit = new AccountTransactionRequest();
+		deposit.setAccountNumber(accountNumber);
+		deposit.setValue(MoneyDto.builder().amount(new BigDecimal("1000.00")).currency(Currency.getInstance("USD")).build());
+		mockPostApi(mockMvc, objectMapper.writeValueAsString(deposit), "/account/deposit", createTestUser(email), null);
+
+		AccountTransactionRequest withdrawal = new AccountTransactionRequest();
+		withdrawal.setAccountNumber(accountNumber);
+		withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal("1000.01")).currency(Currency.getInstance("USD")).build());
+
+		doNothing().when(externalLoggingAspect).logToExternalSystem(any());
+
+		var result = mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
+				.andExpect(status().isBadRequest())
+				.andReturn();
+
+		ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+		assertThat(errorResponse.statusCode()).isEqualTo(400);
+	}
+
+	@Test
+	@DisplayName("Should abort transaction and return 500 when external logging system crashes")
+	void accountWithdrawalExternalErrorTest() throws Exception {
+		var email = "user32@gmail.com";
+		var accounts = performBulkAccountCreation(email);
+		var accountNumber = accounts.get(0).getAccountNumber();
+
+		AccountTransactionRequest deposit = new AccountTransactionRequest();
+		deposit.setAccountNumber(accountNumber);
+		deposit.setValue(MoneyDto.builder().amount(new BigDecimal("1000.00")).currency(Currency.getInstance("USD")).build());
+		mockPostApi(mockMvc, objectMapper.writeValueAsString(deposit), "/account/deposit", createTestUser(email), null);
+
+		AccountTransactionRequest withdrawal = new AccountTransactionRequest();
+		withdrawal.setAccountNumber(accountNumber);
+		withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal("100")).currency(Currency.getInstance("USD")).build());
+
+		doThrow(new ExternalSystemException("External system down"))
+				.when(externalLoggingAspect).logToExternalSystem(any());
+
+		mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
+				.andExpect(status().isInternalServerError())
+				.andReturn();
+
 	}
 
 	@Test

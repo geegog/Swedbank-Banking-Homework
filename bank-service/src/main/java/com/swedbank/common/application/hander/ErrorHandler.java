@@ -3,6 +3,7 @@ package com.swedbank.common.application.hander;
 import com.swedbank.common.application.Dto.ErrorResponse;
 import com.swedbank.common.application.exception.BadRequestException;
 import com.swedbank.common.application.exception.EntityAlreadyExistException;
+import com.swedbank.common.application.exception.ExternalSystemException;
 import com.swedbank.common.application.exception.InsufficientException;
 import com.swedbank.common.application.exception.NotFoundException;
 import com.swedbank.common.application.exception.MismatchException;
@@ -10,6 +11,7 @@ import com.swedbank.common.application.exception.UnauthenticatedException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,10 +47,34 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(CONFLICT.value(), ex.getMessage()), CONFLICT);
     }
 
-    @ExceptionHandler({MismatchException.class, InsufficientException.class, BadRequestException.class})
-    @ResponseStatus(BAD_REQUEST)
-    public ResponseEntity<Object> handleBadRequestException(MismatchException ex) {
-        return new ResponseEntity<>(new ErrorResponse(BAD_REQUEST.value(), ex.getMessage()), BAD_REQUEST);
+    @ExceptionHandler(ExternalSystemException.class)
+    public ResponseEntity<ErrorResponse> handleExternalSystemException(ExternalSystemException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMismatch(MismatchException ex) {
+        return buildBadRequestResponse(ex.getMessage());
+    }
+
+    @ExceptionHandler(InsufficientException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficient(InsufficientException ex) {
+        return buildBadRequestResponse(ex.getMessage());
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return buildBadRequestResponse(ex.getMessage());
+    }
+
+    private ResponseEntity<ErrorResponse> buildBadRequestResponse(String message) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
     }
 
     @Override
