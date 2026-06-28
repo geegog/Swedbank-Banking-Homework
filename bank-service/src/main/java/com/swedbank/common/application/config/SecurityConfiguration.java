@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.swedbank.common.application.filter.TokenAuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,16 +22,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
-@EnableConfigurationProperties
+@EnableConfigurationProperties(CorsProperties.class)
+@RequiredArgsConstructor
 public class SecurityConfiguration {
+
+    private final CorsProperties corsProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
-            .cors(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .securityContext(c -> c.securityContextRepository(requestAttributeSecurityContextRepository()))
             .sessionManagement(httpSecuritySessionManagementConfigurer ->
@@ -45,20 +52,13 @@ public class SecurityConfiguration {
                 );
             })
             .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(expressionInterceptUrlRegistry ->
-                expressionInterceptUrlRegistry
-                    .requestMatchers(
-                        HttpMethod.POST,
-                            "/api/v1/account/user"
-                    )
-                    .permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET
-                    )
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated()
-            );
+                .authorizeHttpRequests(expressionInterceptUrlRegistry ->
+                        expressionInterceptUrlRegistry
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/account/user").permitAll()
+                                .requestMatchers(HttpMethod.GET).permitAll()
+                                .anyRequest().authenticated()
+                );
         http.headers(httpSecurityHeadersConfigurer ->
             httpSecurityHeadersConfigurer.frameOptions(Customizer.withDefaults()).disable()
         );
@@ -88,5 +88,21 @@ public class SecurityConfiguration {
     @Bean
     public RequestAttributeSecurityContextRepository requestAttributeSecurityContextRepository() {
         return new RequestAttributeSecurityContextRepository();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        configuration.setAllowedMethods(corsProperties.getAllowedMethods());
+        configuration.setAllowedHeaders(corsProperties.getAllowedHeaders());
+        configuration.setAllowCredentials(corsProperties.getAllowCredentials());
+        configuration.setMaxAge(corsProperties.getMaxAge());
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
