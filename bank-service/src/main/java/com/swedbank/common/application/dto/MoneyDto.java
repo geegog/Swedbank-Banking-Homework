@@ -1,5 +1,6 @@
 package com.swedbank.common.application.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.swedbank.common.domian.Money;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -22,6 +23,7 @@ public class MoneyDto {
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be greater than 0")
     @Digits(integer = 15, fraction = 2, message = "Amount must have at most 2 decimal places")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
     private BigDecimal amount;
 
     @NotNull(message = "Currency is required")

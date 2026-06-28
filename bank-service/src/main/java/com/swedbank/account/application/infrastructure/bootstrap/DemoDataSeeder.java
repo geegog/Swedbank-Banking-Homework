@@ -2,6 +2,7 @@ package com.swedbank.account.application.infrastructure.bootstrap;
 
 import com.swedbank.account.application.dto.AccountDto;
 import com.swedbank.account.application.dto.AccountTransactionRequest;
+import com.swedbank.account.application.dto.ExchangeRequest;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.account.rest.AccountController;
 import com.swedbank.auth.application.util.JwtUtil;
@@ -54,8 +55,10 @@ public class DemoDataSeeder {
                 log.info("✅ Successfully bootstrapped {} base checking accounts via API layer.", createdAccounts.size());
 
                 String primaryAccountNumber = createdAccounts.get(0).getAccountNumber();
+                String secondaryAccountNumber = createdAccounts.get(1).getAccountNumber();
                 executeInitialDeposit(primaryAccountNumber);
                 executeWithdrawals(primaryAccountNumber);
+                executeExchange(primaryAccountNumber, secondaryAccountNumber);
             }
 
             log.info("✅ JWT Token for FE use: {}", getToken());
@@ -112,6 +115,20 @@ public class DemoDataSeeder {
         }
         log.info("💰 Withdrawal from account: {} where successful", accountNumber);
 
+    }
+
+    private void executeExchange(String accountNumber, String destinationAccountNumber) {
+        ExchangeRequest  exchange = new ExchangeRequest();
+        exchange.setSourceAccountNumber(accountNumber);
+        exchange.setDestinationAccountNumber(destinationAccountNumber);
+        exchange.setValue(MoneyDto.builder()
+                .amount(new BigDecimal("25.00"))
+                .currency(Currency.getInstance("USD"))
+                .build());
+
+        accountController.moveMoneyBetweenAccounts(exchange, getAuthenticatedUser());
+
+        log.info("💰 Exchange between account {} and {} was successful", accountNumber, destinationAccountNumber);
     }
 
     private String getToken() {
