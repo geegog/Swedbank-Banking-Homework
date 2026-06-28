@@ -17,7 +17,7 @@ import com.swedbank.common.application.exception.NotFoundException;
 import com.swedbank.common.domian.Money;
 import com.swedbank.transaction.application.dto.TransactionRequest;
 import com.swedbank.transaction.application.service.TransactionService;
-import com.swedbank.transaction.domian.model.TransactionType;
+import com.swedbank.transaction.domain.model.TransactionType;
 import com.swedbank.user.application.dto.UserAccountRequest;
 import com.swedbank.user.application.dto.UserDto;
 import com.swedbank.user.application.service.UserService;

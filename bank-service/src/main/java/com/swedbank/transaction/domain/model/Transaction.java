@@ -1,4 +1,4 @@
-package com.swedbank.transaction.domian.model;
+package com.swedbank.transaction.domain.model;
 
 import com.swedbank.common.domian.EntityBase;
 import com.swedbank.common.domian.Money;

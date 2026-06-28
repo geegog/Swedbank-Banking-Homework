@@ -1,4 +1,4 @@
-package com.swedbank.transaction.domian.model;
+package com.swedbank.transaction.domain.model;
 
 public enum TransactionType {
 

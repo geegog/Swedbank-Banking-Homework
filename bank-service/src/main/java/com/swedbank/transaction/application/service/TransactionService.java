@@ -6,8 +6,9 @@ import com.swedbank.transaction.application.dto.PagedResult;
 import com.swedbank.transaction.application.dto.TransactionDto;
 import com.swedbank.transaction.application.dto.TransactionRequest;
 import com.swedbank.transaction.application.dto.TransactionSearch;
-import com.swedbank.transaction.domian.model.Transaction;
-import com.swedbank.transaction.domian.repository.TransactionRepository;
+import com.swedbank.transaction.domain.model.Transaction;
+import com.swedbank.transaction.domain.model.TransactionSpecifications;
+import com.swedbank.transaction.domain.repository.TransactionRepository;
 import com.swedbank.user.application.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -15,9 +16,9 @@ import org.modelmapper.TypeToken;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -70,7 +71,9 @@ public class TransactionService {
                 transactionSearch.getSize(),
                 Sort.by(Sort.Direction.DESC, "created"));
 
-        var transactionPage = transactionRepository.findByAccountNumberAndUserId(accountNumber, user.getId(), pageable);
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchQuery(transactionSearch, user.getId(), accountNumber);
+
+        var transactionPage = transactionRepository.findAll(spec, pageable);
 
         return modelMapper.map(
                 transactionPage,

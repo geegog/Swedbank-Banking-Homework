@@ -1,7 +1,7 @@
 package com.swedbank.transaction.application.dto;
 
 import com.swedbank.common.application.dto.MoneyDto;
-import com.swedbank.transaction.domian.model.TransactionType;
+import com.swedbank.transaction.domain.model.TransactionType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
