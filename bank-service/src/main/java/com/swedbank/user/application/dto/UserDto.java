@@ -1,6 +1,6 @@
 package com.swedbank.user.application.dto;
 
-import com.swedbank.common.application.Dto.BaseDto;
+import com.swedbank.common.application.dto.BaseDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

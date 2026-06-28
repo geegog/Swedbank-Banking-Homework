@@ -1,6 +1,6 @@
 package com.swedbank.common.application.config;
 
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.common.application.customizer.ModelMapperCustomizer;
 import com.swedbank.common.domian.Money;
 import org.modelmapper.Converter;

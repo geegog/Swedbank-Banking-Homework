@@ -1,6 +1,6 @@
 package com.swedbank.account.application.dto;
 
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

@@ -10,7 +10,7 @@ import com.swedbank.account.application.util.AccountNumberGenerator;
 import com.swedbank.account.domain.model.Account;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.account.domain.repository.AccountRepository;
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.common.application.exception.InsufficientException;
 import com.swedbank.common.application.exception.MismatchException;
 import com.swedbank.common.application.exception.NotFoundException;

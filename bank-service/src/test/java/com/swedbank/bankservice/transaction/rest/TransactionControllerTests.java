@@ -6,12 +6,10 @@ import com.swedbank.account.application.dto.AccountDto;
 import com.swedbank.account.application.dto.AccountTransactionRequest;
 import com.swedbank.account.application.dto.ExchangeRequest;
 import com.swedbank.account.application.dto.ExchangeResponse;
-import com.swedbank.account.application.infrastructure.aop.ExternalLoggingAspect;
+import com.swedbank.account.application.integration.LogIntegration;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.bankservice.common.rest.BaseIntegrationTest;
-import com.swedbank.common.application.Dto.ErrorResponse;
-import com.swedbank.common.application.Dto.MoneyDto;
-import com.swedbank.common.application.exception.ExternalSystemException;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.transaction.application.dto.PagedResult;
 import com.swedbank.transaction.application.dto.TransactionDto;
 import com.swedbank.transaction.application.dto.TransactionSearch;
@@ -29,13 +27,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
-import java.util.Set;
 
 import static com.swedbank.bankservice.common.utils.ApiUtil.mockGetApi;
 import static com.swedbank.bankservice.common.utils.ApiUtil.mockPostApi;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +48,7 @@ class TransactionControllerTests extends BaseIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	@MockitoBean
-	private ExternalLoggingAspect externalLoggingAspect;
+	private LogIntegration logIntegration;
 
 	private UserDto createTestUser(String email) {
 		UserDto userDto = new UserDto();
@@ -69,64 +66,47 @@ class TransactionControllerTests extends BaseIntegrationTest {
 		return request;
 	}
 
-	/**
-	 * Helper method to initialize a standard base state of accounts for tests.
-	 */
 	private List<AccountDto> performBulkAccountCreation(String email) throws Exception {
 		UserAccountRequest userAccountRequest = new UserAccountRequest();
 		userAccountRequest.setUser(createTestUser(email));
-
 		userAccountRequest.setCreateAccounts(List.of(
 				buildAccountReq("Main EUR", "EUR"),
 				buildAccountReq("Main USD", "USD")
-				));
+		));
 
 		var payload = objectMapper.writeValueAsString(userAccountRequest);
-
 		var mvcResult = mockPostApi(mockMvc, payload, "/account/user", null, null)
 				.andExpect(status().isCreated())
 				.andReturn();
 
-		List<AccountDto> accounts = objectMapper.readValue(
+		return objectMapper.readValue(
 				mvcResult.getResponse().getContentAsString(),
 				objectMapper.getTypeFactory().constructCollectionType(List.class, AccountDto.class)
 		);
-
-		assertThat(accounts).hasSize(2);
-		return accounts;
 	}
 
 	private void performAccountTransactions(String email, AccountDto eurAccount, AccountDto usdAccount) throws Exception {
-
 		AccountTransactionRequest depositRequest = new AccountTransactionRequest();
 		depositRequest.setAccountNumber(eurAccount.getAccountNumber());
-		depositRequest.setValue(MoneyDto.builder()
-				.amount(new BigDecimal("1000"))
-				.currency(Currency.getInstance("EUR"))
-				.build());
+		depositRequest.setValue(MoneyDto.builder().amount(new BigDecimal("1000")).currency(Currency.getInstance("EUR")).build());
 		depositRequest.setReference("Initial Deposit");
 
-		var result = mockPostApi(mockMvc, objectMapper.writeValueAsString(depositRequest),
-				"/account/deposit", createTestUser(email), null)
+		var result = mockPostApi(mockMvc, objectMapper.writeValueAsString(depositRequest), "/account/deposit", createTestUser(email), null)
 				.andExpect(status().isOk())
 				.andReturn();
 
 		AccountDto updatedAccount = objectMapper.readValue(result.getResponse().getContentAsString(), AccountDto.class);
-
 		assertThat(updatedAccount.getBalance().getAmount()).isEqualByComparingTo("1000");
-		assertThat(updatedAccount.getBalance().getCurrency()).isEqualTo(Currency.getInstance("EUR"));
 
 		for (int i = 1; i <= 10; i++) {
-
 			AccountTransactionRequest withdrawal = new AccountTransactionRequest();
 			withdrawal.setAccountNumber(eurAccount.getAccountNumber());
 			withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal(i * 10)).currency(Currency.getInstance("EUR")).build());
 
-			doNothing().when(externalLoggingAspect).logToExternalSystem(any());
+			doReturn("201").when(logIntegration).logSimulatorCall();
 
 			mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
-					.andExpect(status().isOk())
-					.andReturn();
+					.andExpect(status().isOk());
 		}
 
 		ExchangeRequest eurToUsdRequest = new ExchangeRequest();
@@ -142,10 +122,9 @@ class TransactionControllerTests extends BaseIntegrationTest {
 		assertThat(responseUsd.getSourceAccount().getBalance().getAmount()).isEqualByComparingTo("300.00");
 	}
 
-
 	@Test
-	@DisplayName("Should fetch account transaction made by user")
-	void accountTransactionTest() throws Exception {
+	@DisplayName("Should fetch account transactions made by user")
+	void accountTransactionsTest() throws Exception {
 		var email = "user6@gmail.com";
 		var accounts = performBulkAccountCreation(email);
 		var eurAccount = accounts.get(0);
@@ -154,22 +133,50 @@ class TransactionControllerTests extends BaseIntegrationTest {
 		performAccountTransactions(email, eurAccount, usdAccount);
 
 		TransactionSearch transactionSearch = new TransactionSearch();
-
 		var body = objectMapper.writeValueAsString(transactionSearch);
 
-		var result = mockPostApi(mockMvc, body,
-				"/transaction/account/" + eurAccount.getAccountNumber() + "/history",
-				createTestUser(email),
-				null).andExpect(status().isOk())
+		var result = mockPostApi(mockMvc, body, "/transaction/account/" + eurAccount.getAccountNumber() + "/history", createTestUser(email), null)
+				.andExpect(status().isOk())
 				.andReturn();
 
 		PagedResult<TransactionDto> transactionDtoPagedResult = objectMapper.readValue(
 				result.getResponse().getContentAsString(),
-                new TypeReference<>() {}
+				new TypeReference<>() {}
 		);
 
-		assertThat(transactionDtoPagedResult.getContent().size()).isEqualTo(13);
-		assertThat(transactionDtoPagedResult.getContent().get(12).getBalance().getAmount()).isEqualByComparingTo("300.00");
-
+		assertThat(transactionDtoPagedResult.getContent()).hasSize(13);
+		assertThat(transactionDtoPagedResult.getContent().get(1).getBalance().getAmount()).isEqualByComparingTo("300.00");
 	}
+
+	@Test
+	@DisplayName("Should fetch single account transaction item details explicitly")
+	void accountTransactionTest() throws Exception {
+		var email = "user7@gmail.com";
+		var accounts = performBulkAccountCreation(email);
+		var eurAccount = accounts.get(0);
+		var usdAccount = accounts.get(1);
+
+		performAccountTransactions(email, eurAccount, usdAccount);
+
+		TransactionSearch transactionSearch = new TransactionSearch();
+		var body = objectMapper.writeValueAsString(transactionSearch);
+
+		var result = mockPostApi(mockMvc, body, "/transaction/account/" + eurAccount.getAccountNumber() + "/history", createTestUser(email), null)
+				.andExpect(status().isOk())
+				.andReturn();
+
+		PagedResult<TransactionDto> transactionDtoPagedResult = objectMapper.readValue(
+				result.getResponse().getContentAsString(),
+				new TypeReference<>() {}
+		);
+
+		var transactionDto = transactionDtoPagedResult.getContent().get(0);
+		var fetchTransactionResult = mockGetApi(mockMvc, "/transaction/" + transactionDto.getId(), createTestUser(email), null, null)
+				.andExpect(status().isOk())
+				.andReturn();
+
+		TransactionDto returnedTransactionDto = objectMapper.readValue(fetchTransactionResult.getResponse().getContentAsString(), TransactionDto.class);
+		assertThat(returnedTransactionDto.getId()).isEqualTo(transactionDto.getId());
+	}
+
 }

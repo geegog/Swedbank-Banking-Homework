@@ -9,11 +9,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +31,12 @@ public class TransactionController {
             @AuthenticationPrincipal User user,
             @PathVariable String accountNumber) {
         return ResponseEntity.ok(transactionService.getTransactions(transactionSearch, accountNumber, user.getUsername()));
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<TransactionDto> getTransactions(@PathVariable UUID id,
+                                                                       @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(transactionService.getTransaction(id, user.getUsername()));
     }
 
 }

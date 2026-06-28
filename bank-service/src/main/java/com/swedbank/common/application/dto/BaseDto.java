@@ -1,4 +1,4 @@
-package com.swedbank.common.application.Dto;
+package com.swedbank.common.application.dto;
 
 import lombok.Getter;
 import lombok.Setter;

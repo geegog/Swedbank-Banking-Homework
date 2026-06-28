@@ -1,12 +1,10 @@
 package com.swedbank.account.application.dto;
 
-import com.swedbank.common.application.Dto.BaseDto;
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.BaseDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.user.application.dto.UserDto;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Currency;
 
 @Getter
 @Setter

@@ -5,7 +5,7 @@ import com.swedbank.account.application.dto.AccountTransactionRequest;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.account.rest.AccountController;
 import com.swedbank.auth.application.util.JwtUtil;
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.user.application.dto.UserAccountRequest;
 import com.swedbank.user.application.dto.UserDto;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +55,7 @@ public class DemoDataSeeder {
 
                 String primaryAccountNumber = createdAccounts.get(0).getAccountNumber();
                 executeInitialDeposit(primaryAccountNumber);
+                executeWithdrawals(primaryAccountNumber);
             }
 
             log.info("✅ JWT Token for FE use: {}", getToken());
@@ -92,10 +93,25 @@ public class DemoDataSeeder {
                 .amount(new BigDecimal("2500.00"))
                 .currency(Currency.getInstance("USD"))
                 .build());
-        deposit.setReference("TEST_USER_STARTUP_CREDIT");
+        deposit.setReference("Money to spend on everything");
 
         accountController.addMoneyToAccount(deposit, getAuthenticatedUser());
         log.info("💰 Successfully deposited startup credit of $2500.00 to account: {}", accountNumber);
+    }
+
+    private void executeWithdrawals(String accountNumber) {
+        for (int i = 1; i <= 60; i++) {
+            var val = i * 1.34;
+            AccountTransactionRequest withdrawal = new AccountTransactionRequest();
+            withdrawal.setAccountNumber(accountNumber);
+            withdrawal.setValue(MoneyDto.builder()
+                    .amount(new BigDecimal(val))
+                    .currency(Currency.getInstance("USD"))
+                    .build());
+            accountController.removeMoneyFromAccount(withdrawal, getAuthenticatedUser());
+        }
+        log.info("💰 Withdrawal from account: {} where successful", accountNumber);
+
     }
 
     private String getToken() {

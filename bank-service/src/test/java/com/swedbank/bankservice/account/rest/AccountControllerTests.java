@@ -5,11 +5,11 @@ import com.swedbank.account.application.dto.AccountDto;
 import com.swedbank.account.application.dto.AccountTransactionRequest;
 import com.swedbank.account.application.dto.ExchangeRequest;
 import com.swedbank.account.application.dto.ExchangeResponse;
-import com.swedbank.account.application.infrastructure.aop.ExternalLoggingAspect;
+import com.swedbank.account.application.integration.LogIntegration;
 import com.swedbank.account.domain.model.CreateAccountRequest;
 import com.swedbank.bankservice.common.rest.BaseIntegrationTest;
-import com.swedbank.common.application.Dto.ErrorResponse;
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.ErrorResponse;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.common.application.exception.ExternalSystemException;
 import com.swedbank.user.application.dto.UserAccountRequest;
 import com.swedbank.user.application.dto.UserDto;
@@ -32,6 +32,7 @@ import static com.swedbank.bankservice.common.utils.ApiUtil.mockPostApi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,7 +48,7 @@ class AccountControllerTests extends BaseIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	@MockitoBean
-	private ExternalLoggingAspect externalLoggingAspect;
+	private LogIntegration logIntegration;
 
 	private UserDto createTestUser(String email) {
 		UserDto userDto = new UserDto();
@@ -212,7 +213,7 @@ class AccountControllerTests extends BaseIntegrationTest {
 		withdrawal.setAccountNumber(accountNumber);
 		withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal("145.10")).currency(Currency.getInstance("USD")).build());
 
-		doNothing().when(externalLoggingAspect).logToExternalSystem(any());
+		doReturn("201").when(logIntegration).logSimulatorCall();
 
 		var result = mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
 				.andExpect(status().isOk())
@@ -239,7 +240,7 @@ class AccountControllerTests extends BaseIntegrationTest {
 		withdrawal.setAccountNumber(accountNumber);
 		withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal("1000.01")).currency(Currency.getInstance("USD")).build());
 
-		doNothing().when(externalLoggingAspect).logToExternalSystem(any());
+		doReturn("201").when(logIntegration).logSimulatorCall();
 
 		var result = mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
 				.andExpect(status().isBadRequest())
@@ -266,8 +267,8 @@ class AccountControllerTests extends BaseIntegrationTest {
 		withdrawal.setAccountNumber(accountNumber);
 		withdrawal.setValue(MoneyDto.builder().amount(new BigDecimal("100")).currency(Currency.getInstance("USD")).build());
 
-		doThrow(new ExternalSystemException("External system down"))
-				.when(externalLoggingAspect).logToExternalSystem(any());
+		doThrow(new ExternalSystemException("External system down")).when(logIntegration).logSimulatorCall();
+
 
 		mockPostApi(mockMvc, objectMapper.writeValueAsString(withdrawal), "/account/withdraw", createTestUser(email), null)
 				.andExpect(status().isInternalServerError())

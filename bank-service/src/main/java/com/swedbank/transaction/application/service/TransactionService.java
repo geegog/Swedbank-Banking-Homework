@@ -1,5 +1,6 @@
 package com.swedbank.transaction.application.service;
 
+import com.swedbank.common.application.exception.NotFoundException;
 import com.swedbank.common.domian.Money;
 import com.swedbank.transaction.application.dto.PagedResult;
 import com.swedbank.transaction.application.dto.TransactionDto;
@@ -13,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -64,7 +66,9 @@ public class TransactionService {
 
         var user = userService.getUserByEmail(email);
 
-        Pageable pageable = PageRequest.of(transactionSearch.getPage(), transactionSearch.getSize());
+        Pageable pageable = PageRequest.of(transactionSearch.getPage(),
+                transactionSearch.getSize(),
+                Sort.by(Sort.Direction.DESC, "created"));
 
         var transactionPage = transactionRepository.findByAccountNumberAndUserId(accountNumber, user.getId(), pageable);
 
@@ -73,6 +77,16 @@ public class TransactionService {
                 new TypeToken<PagedResult<TransactionDto>>() {}.getType()
         );
 
+    }
+
+    public TransactionDto getTransaction(UUID transactionId, String email) {
+
+        var user = userService.getUserByEmail(email);
+
+        var transaction = transactionRepository.findByIdAndUserId(transactionId, user.getId()).orElseThrow(
+                () -> new NotFoundException("Transaction not found")
+        );
+        return modelMapper.map(transaction, TransactionDto.class);
     }
 
 }

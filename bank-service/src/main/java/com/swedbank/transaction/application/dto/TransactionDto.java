@@ -1,7 +1,7 @@
 package com.swedbank.transaction.application.dto;
 
-import com.swedbank.common.application.Dto.BaseDto;
-import com.swedbank.common.application.Dto.MoneyDto;
+import com.swedbank.common.application.dto.BaseDto;
+import com.swedbank.common.application.dto.MoneyDto;
 import com.swedbank.transaction.domian.model.TransactionType;
 import lombok.Getter;
 import lombok.Setter;

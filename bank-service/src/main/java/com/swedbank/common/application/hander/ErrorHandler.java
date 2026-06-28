@@ -1,6 +1,6 @@
 package com.swedbank.common.application.hander;
 
-import com.swedbank.common.application.Dto.ErrorResponse;
+import com.swedbank.common.application.dto.ErrorResponse;
 import com.swedbank.common.application.exception.BadRequestException;
 import com.swedbank.common.application.exception.EntityAlreadyExistException;
 import com.swedbank.common.application.exception.ExternalSystemException;

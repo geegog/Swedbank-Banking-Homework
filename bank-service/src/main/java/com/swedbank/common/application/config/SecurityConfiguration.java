@@ -56,7 +56,6 @@ public class SecurityConfiguration {
                         expressionInterceptUrlRegistry
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/account/user").permitAll()
-                                .requestMatchers(HttpMethod.GET).permitAll()
                                 .anyRequest().authenticated()
                 );
         http.headers(httpSecurityHeadersConfigurer ->

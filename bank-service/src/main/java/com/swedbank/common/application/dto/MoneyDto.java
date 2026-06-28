@@ -1,10 +1,9 @@
-package com.swedbank.common.application.Dto;
+package com.swedbank.common.application.dto;
 
 import com.swedbank.common.domian.Money;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
