@@ -22,7 +22,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       # CRITICAL: 'validate' makes Hibernate double-check that your @Entity structures
       # perfectly match the tables created by your Liquibase scripts without altering them
