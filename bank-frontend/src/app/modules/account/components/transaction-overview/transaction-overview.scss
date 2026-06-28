@@ -7,7 +7,7 @@
   margin: 0 auto;
 
   .back-link {
-    color: #3498db;
+    color: #EE7200;
     text-decoration: none;
     font-weight: bold;
 
@@ -42,7 +42,7 @@
 
       .receipt-title {
         margin: 0;
-        color: #2c3e50;
+        color: #2B2523;
       }
 
       .receipt-date {
@@ -134,7 +134,7 @@
     .pdf-btn {
       width: 100%;
       padding: 14px;
-      background-color: #2c3e50;
+      background-color: #2B2523;
       color: white;
       border: none;
       border-radius: 6px;
@@ -145,7 +145,7 @@
 
       // Clean CSS Hover State (Replaces the old inline javascript event lines)
       &:hover {
-        background-color: #34495e;
+        background-color: #EE7200;
       }
     }
   }

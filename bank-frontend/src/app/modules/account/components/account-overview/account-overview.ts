@@ -123,8 +123,8 @@ export class AccountOverview implements OnInit {
             {
               label: `Balance History (${this.account?.balance?.currency})`,
               data: balancePoints,
-              borderColor: '#2980b9',
-              backgroundColor: 'rgba(41, 128, 185, 0.1)',
+              borderColor: '#EE7200',
+              backgroundColor: 'rgba(238, 114, 0, 0.05)',
               borderWidth: 2,
               fill: true,
               tension: 0.2,

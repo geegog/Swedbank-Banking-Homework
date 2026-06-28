@@ -37,13 +37,13 @@
     margin-bottom: 30px;
 
     .header-title {
-      color: #2c3e50;
+      color: #2B2523;
       margin: 0;
       font-size: 2rem;
     }
 
     .header-subtitle {
-      color: #7f8c8d;
+      color: #EE7200;
       margin: 5px 0 0 0;
 
       strong {
@@ -72,8 +72,8 @@
       // Clean CSS Hover State (replaces old JS onmouseover/onmouseout attributes)
       &:hover {
         transform: translateY(-4px);
-        border-color: #3498db;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        border-color: #EE7200;
+        box-shadow: 0 6px 12px rgba(238, 114, 0, 0.08);
       }
 
       .card-header {
@@ -91,8 +91,8 @@
         }
 
         .account-badge {
-          background-color: #ebf5fb;
-          color: #2980b9;
+          background-color: #F9F8F6;
+          color: #EE7200;
           padding: 4px 8px;
           border-radius: 4px;
           font-size: 0.75rem;
@@ -103,7 +103,7 @@
       .account-balance {
         font-size: 1.8rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: #2B2523;
         margin-bottom: 5px;
 
         .currency {
@@ -116,7 +116,7 @@
 
       .view-details {
         font-size: 0.85rem;
-        color: #3498db;
+        color: #EE7200;
         margin-top: 15px;
         font-weight: 600;
       }
