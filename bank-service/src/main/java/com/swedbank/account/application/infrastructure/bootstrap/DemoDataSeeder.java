@@ -110,18 +110,24 @@ public class DemoDataSeeder {
     }
 
     private void executeWithdrawals(String accountNumber) {
-        for (int i = 1; i <= 60; i++) {
-            var val = i * 1.34;
+        int successfulCount = 0;
+        for (int i = 1; i <= 20; i++) {
+            var val = i * 10;
             AccountTransactionRequest withdrawal = new AccountTransactionRequest();
             withdrawal.setAccountNumber(accountNumber);
             withdrawal.setValue(MoneyDto.builder()
                     .amount(new BigDecimal(val))
                     .currency(Currency.getInstance("USD"))
                     .build());
-            accountController.removeMoneyFromAccount(withdrawal, getAuthenticatedUser());
-        }
-        log.info("💰 Withdrawal from account: {} where successful", accountNumber);
+            var response = accountController.removeMoneyFromAccount(withdrawal, getAuthenticatedUser());
 
+            if (response.getStatusCode().is2xxSuccessful()) {
+                successfulCount++;
+            } else {
+                log.warn("⚠️ Withdrawal iteration {} failed. Status: {}, Body: {}", i, response.getStatusCode(), response.getBody());
+            }
+        }
+        log.info("💰 Withdrawal loop complete. {} out of 20 transactions were successful.", successfulCount);
     }
 
     private void executeExchange(String accountNumber, String destinationAccountNumber) {
